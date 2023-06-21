@@ -1,4 +1,4 @@
-# dcprof
+# discord-custom-profile
 
 Add fancy things to your Discord profile using emotes!
 
