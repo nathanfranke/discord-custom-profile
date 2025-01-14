@@ -1,4 +1,4 @@
-const Jimp = require('jimp');
+const { Jimp } = require('jimp');
 const fs = require('fs');
 
 const DEFAULT_MARGIN = 2;
@@ -86,7 +86,7 @@ const ICON_MARGINS = {
 				_icon_progress.push(await Jimp.read(`./items/${icon}.png`));
 				_icon_margin = ICON_MARGINS[icon] || DEFAULT_MARGIN;
 			} catch (e) {
-				throw new Error(`Failed to load icon '${icon}'. It probably doesn't exist!`);
+				throw new Error(`Failed to load icon '${icon}'. It probably doesn't exist! ${e}`);
 			}
 		};
 		let finish_icons = async () => {
@@ -97,23 +97,32 @@ const ICON_MARGINS = {
 			let full_width = 0;
 			let height = 0;
 			for (let icon of _icon_progress) {
-				full_width += icon.getWidth();
-				height = Math.max(height, icon.getHeight());
+				full_width += icon.width;
+				height = Math.max(height, icon.height);
 			}
 
-			let full_image = new Jimp(height * Math.ceil(full_width / height), height);
+			let full_image = new Jimp({
+				width: height * Math.ceil(full_width / height),
+				height,
+			});
+
 			{
 				let x = 0;
 				for (let icon of _icon_progress) {
 					full_image.composite(icon, x, 0);
-					x += icon.getWidth();
+					x += icon.width;
 				}
 			}
 
 			for (let x = 0; x < full_width - _icon_margin; x += height) {
 				++emote_count;
 
-				let emote = full_image.clone().crop(x, 0, height, height);
+				let emote = full_image.clone().crop({
+					x,
+					y: 0,
+					w: height,
+					h: height,
+				});
 				emote.write(`${emotes_path}/p${emote_count}.png`);
 
 				line_result += `:p${emote_count}:`;
